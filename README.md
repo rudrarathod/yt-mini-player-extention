@@ -13,7 +13,7 @@ This Chrome extension adds a custom miniplayer button to YouTube, allowing users
 - Listens for YouTube navigation events and DOM mutations to ensure the button is always present.
 
 ## Installation
-1. Download or clone this repository.
+1. Download Releases or clone this repository.
 2. Go to `chrome://extensions/` in your browser.
 3. Enable "Developer mode" (top right).
 4. Click "Load unpacked" and select this folder.
