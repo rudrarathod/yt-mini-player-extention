@@ -42,7 +42,7 @@ function ensureMiniplayerButton() {
             </svg>
         `;
 
-        const sizeButton = document.querySelector('.ytp-size-button');
+        const sizeButton = document.querySelector('.ytp-settings-button');
         if (sizeButton && sizeButton.parentNode) {
             sizeButton.parentNode.insertBefore(button, sizeButton.nextSibling);
         } else {
