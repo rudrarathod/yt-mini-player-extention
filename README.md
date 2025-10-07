@@ -72,10 +72,8 @@ Simply press the **`i`** key while watching any YouTube video to toggle miniplay
 ### Visual Guide
 
 The miniplayer button appears here in the YouTube player controls:
-```
-[Play] [Volume] [Settings] [🔲 Miniplayer] [Theater] [Fullscreen]
-                              ↑ New button!
-```
+![Miniplayer button location](assests/image.png)
+
 
 ## 🔧 How It Works
 
