@@ -1,6 +1,6 @@
-# 🎬 YouTube Miniplayer Button Extension
+# 🎬 YouTube Miniplayer & Picture-in-Picture Extension
 
-> A lightweight browser extension that adds a convenient miniplayer button directly to YouTube's video player controls.
+> A lightweight browser extension that adds convenient miniplayer and picture-in-picture buttons directly to YouTube's video player controls.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Manifest Version](https://img.shields.io/badge/Manifest-V3-blue.svg)](https://developer.chrome.com/docs/extensions/mv3/intro/)
@@ -8,8 +8,9 @@
 ## ✨ Features
 
 - 🎯 **One-Click Miniplayer** - Instantly activate YouTube's miniplayer mode with a single click
-- ⌨️ **Keyboard Shortcut** - Works seamlessly with YouTube's native "i" keyboard shortcut
-- 🔄 **Auto-Injection** - Automatically maintains the button across page navigation and DOM changes
+- 🖼️ **Picture-in-Picture Mode** - Float videos in a dedicated window using browser's native PiP API
+- ⌨️ **Keyboard Shortcut** - Works seamlessly with YouTube's native "i" keyboard shortcut for miniplayer
+- 🔄 **Auto-Injection** - Automatically maintains buttons across page navigation and DOM changes
 - 🎨 **Native Design** - Styled to match YouTube's native player controls perfectly
 - ⚡ **Lightweight** - Minimal performance impact with efficient code
 
@@ -58,12 +59,19 @@ cd yt-mini-player-extention
 
 ## 🚀 How to Use
 
-### Using the Button
+### Using the Miniplayer Button
 
 1. **Navigate** to any YouTube video
-2. **Look** for the new miniplayer button in the video player controls (located next to the settings gear icon)
+2. **Look** for the miniplayer button in the video player controls (located next to the settings gear icon)
 3. **Click** the button to activate miniplayer mode
 4. The video will shrink to the bottom-right corner, allowing you to browse YouTube while watching
+
+### Using the Picture-in-Picture Button
+
+1. **Navigate** to any YouTube video
+2. **Look** for the picture-in-picture button in the video player controls (located before the settings gear icon)
+3. **Click** the button to open the video in a floating window
+4. The video will appear in a dedicated floating window that stays on top of other applications
 
 ### Using the Keyboard Shortcut
 
@@ -71,8 +79,11 @@ Simply press the **`i`** key while watching any YouTube video to toggle miniplay
 
 ### Visual Guide
 
-The miniplayer button appears here in the YouTube player controls:
-![Miniplayer button location](assests/image.png)
+Both the picture-in-picture and miniplayer buttons appear in the YouTube player controls:
+- **PiP Button**: Located before the settings gear icon
+- **Miniplayer Button**: Located next to the settings gear icon
+
+![Button locations](assests/image.png)
 
 
 ## 🔧 How It Works
@@ -80,10 +91,11 @@ The miniplayer button appears here in the YouTube player controls:
 The extension uses modern web technologies to seamlessly integrate with YouTube:
 
 1. **Content Script Injection** - The `content.js` script runs on all YouTube pages
-2. **DOM Manipulation** - Creates and injects a button element into YouTube's player controls
-3. **Event Simulation** - Clicking the button simulates pressing the "i" key
-4. **Navigation Handling** - Listens for YouTube's SPA navigation events
-5. **Mutation Observer** - Monitors DOM changes to ensure the button persists
+2. **DOM Manipulation** - Creates and injects button elements into YouTube's player controls
+3. **Event Simulation** - Miniplayer button simulates pressing the "i" key
+4. **Native PiP API** - Picture-in-Picture button uses browser's `requestPictureInPicture()` API
+5. **Navigation Handling** - Listens for YouTube's SPA navigation events
+6. **Mutation Observer** - Monitors DOM changes to ensure buttons persist
 
 ## 📁 Project Structure
 
@@ -97,7 +109,7 @@ yt-mini-player-extention/
 ### File Descriptions
 
 - **`manifest.json`** - Defines the extension's metadata, permissions, and behavior
-- **`content.js`** - Contains the logic for creating, injecting, and managing the miniplayer button
+- **`content.js`** - Contains the logic for creating, injecting, and managing both the miniplayer and picture-in-picture buttons
 - **`README.md`** - Complete documentation and usage instructions
 
 ## 🔐 Permissions
@@ -128,15 +140,20 @@ cd yt-mini-player-extention
 
 ## ❓ Troubleshooting
 
-**Button not appearing?**
+**Buttons not appearing?**
 - Refresh the YouTube page
 - Ensure the extension is enabled in your browser
 - Check that you're using a compatible browser
 
-**Button appears but doesn't work?**
+**Buttons appear but don't work?**
 - Try refreshing the page
 - Check browser console for errors (F12 → Console)
 - Ensure you're on a video page (not YouTube homepage)
+
+**Picture-in-Picture not working?**
+- Ensure your browser supports the Picture-in-Picture API
+- Check that PiP is not disabled in browser settings
+- Some browsers may require user gesture before allowing PiP
 
 **Need more help?**
 - Open an issue on [GitHub Issues](../../issues)

@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "YouTube Miniplayer Button Injector",
-    "version": "1.0",
-    "description": "Adds a custom miniplayer button to YouTube.",
+    "name": "YouTube Miniplayer & Picture-in-Picture Extension",
+    "version": "1.1",
+    "description": "Adds custom miniplayer and picture-in-picture buttons to YouTube.",
     "permissions": [
         "scripting"
     ],
