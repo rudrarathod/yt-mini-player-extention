@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YT Mini Player Extension Options</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #181818;
+      color: #fff;
+      margin: 0;
+      min-width: 260px;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #232323;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      padding: 1.5em 1.5em 1em 1.5em;
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    h2 {
+      margin: 0 0 1em 0;
+      font-size: 1.2em;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #fff;
+      text-align: center;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1em;
+    }
+    .toggle-label {
+      font-size: 1em;
+      color: #eee;
+      user-select: none;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #444;
+      border-radius: 24px;
+      transition: background 0.2s;
+    }
+    .switch input:checked + .slider {
+      background: #1db954;
+    }
+    .slider:before {
+      position: absolute;
+      content: '';
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    }
+    .switch input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    #status {
+      color: #1db954;
+      margin-top: 0.5em;
+      text-align: center;
+      font-size: 0.95em;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Extension Features</h2>
+    <form id="features-form">
+      <button type="button" id="toggle-all" style="margin-bottom:1em; background:#1db954; color:#fff; border:none; border-radius:8px; padding:0.5em 1.2em; font-size:1em; cursor:pointer; transition:background 0.2s;">Toggle All</button>
+      <div class="toggle-row">
+        <span class="toggle-label">Miniplayer Button</span>
+        <label class="switch">
+          <input type="checkbox" id="feature-miniplayer">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Picture-in-Picture</span>
+        <label class="switch">
+          <input type="checkbox" id="feature-pip">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Gesture Controls</span>
+        <label class="switch">
+          <input type="checkbox" id="feature-gesture">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Speed Changer</span>
+        <label class="switch">
+          <input type="checkbox" id="feature-speed">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </form>
+    <div style="margin:1.2em 0 0.5em 0;">
+      <label for="show-gesture-overlay" style="display:block; color:#eee; font-size:1em; margin-bottom:0.3em;">
+        <input type="checkbox" id="show-gesture-overlay" style="vertical-align:middle; margin-right:0.5em;"> Show Gesture Area Overlay
+      </label>
+    </div>
+    <div style="margin:1.2em 0 0.5em 0;">
+      <label for="gesture-sensitivity" style="display:block; color:#eee; font-size:1em; margin-bottom:0.3em;">Gesture Sensitivity</label>
+      <input type="range" min="1" max="20" value="5" id="gesture-sensitivity" style="width:100%;">
+      <div style="text-align:right; color:#bbb; font-size:0.95em; margin-top:0.2em;">
+        <span id="gesture-sensitivity-value">5</span>
+      </div>
+    </div>
+    <div id="status"></div>
+    <!-- Refresh message and button removed: changes now apply live -->
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

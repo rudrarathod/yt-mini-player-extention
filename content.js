@@ -117,27 +117,408 @@ function ensureMiniplayerButton() {
     attachMiniplayerListener(button);
 }
 
-// Initial check
-ensurePipButton();
-ensureMiniplayerButton();
 
-function runMiniplayerSetup() {
-    ensurePipButton();
-    ensureMiniplayerButton();
+// --- Feature toggles from popup ---
+
+const FEATURE_KEYS = {
+    miniplayer: 'feature-miniplayer',
+    pip: 'feature-pip',
+    gesture: 'feature-gesture',
+    speed: 'feature-speed'
+};
+
+// --- Speed Changer Button ---
+const SPEED_MODES = [0.5, 0.75, 1, 1.5, 2];
+const SPEED_ICONS = {
+    0.5: `<svg width="36" height="36" viewBox="0 0 36 36"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="#fff" font-family="Arial">0.5x</text></svg>`,
+    0.75: `<svg width="36" height="36" viewBox="0 0 36 36"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="#fff" font-family="Arial">.75x</text></svg>`,
+    1: `<svg width="36" height="36" viewBox="0 0 36 36"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="#fff" font-family="Arial">1x</text></svg>`,
+    1.5: `<svg width="36" height="36" viewBox="0 0 36 36"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="#fff" font-family="Arial">1.5x</text></svg>`,
+    2: `<svg width="36" height="36" viewBox="0 0 36 36"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="#fff" font-family="Arial">2x</text></svg>`
+};
+
+function ensureSpeedButton() {
+    let speedBtn = document.querySelector('.ytp-speed-changer-button');
+    if (!speedBtn) {
+        speedBtn = document.createElement('button');
+        speedBtn.className = 'ytp-speed-changer-button ytp-button';
+        speedBtn.setAttribute('data-priority', '8');
+        speedBtn.setAttribute('title', 'Playback Speed');
+        speedBtn.setAttribute('aria-label', 'Playback Speed');
+        speedBtn.setAttribute('data-tooltip-title', 'Playback Speed');
+        speedBtn.setAttribute('data-title-no-tooltip', 'Playback Speed');
+        speedBtn.innerHTML = SPEED_ICONS[1];
+        speedBtn.__speedIndex = 2; // default to 1x
+        speedBtn.addEventListener('click', function() {
+            this.__speedIndex = (this.__speedIndex + 1) % SPEED_MODES.length;
+            const speed = SPEED_MODES[this.__speedIndex];
+            setVideoSpeed(speed);
+            this.innerHTML = SPEED_ICONS[speed];
+            this.setAttribute('title', `Speed: ${speed}x`);
+            this.setAttribute('aria-label', `Speed: ${speed}x`);
+            this.setAttribute('data-tooltip-title', `Speed: ${speed}x`);
+        });
+        // Insert before settings button if possible
+        const settingsButton = document.querySelector('.ytp-settings-button');
+        if (settingsButton && settingsButton.parentNode) {
+            settingsButton.parentNode.insertBefore(speedBtn, settingsButton);
+        } else {
+            const rightControls = document.querySelector('.ytp-right-controls');
+            if (rightControls) rightControls.insertBefore(speedBtn, rightControls.firstChild);
+        }
+    }
+    // Set initial speed and icon
+    setVideoSpeed(SPEED_MODES[speedBtn.__speedIndex || 2]);
+    speedBtn.innerHTML = SPEED_ICONS[SPEED_MODES[speedBtn.__speedIndex || 2]];
 }
 
-runMiniplayerSetup();
+function setVideoSpeed(speed) {
+    const video = document.querySelector('video');
+    if (video) video.playbackRate = speed;
+}
+
+
+function runFeatureSetup() {
+    chrome.storage.sync.get([
+        FEATURE_KEYS.miniplayer,
+        FEATURE_KEYS.pip,
+        FEATURE_KEYS.gesture,
+        FEATURE_KEYS.speed
+    ], (result) => {
+        // Default: all features ON if not set
+        const enableMiniplayer = result[FEATURE_KEYS.miniplayer] !== false;
+        const enablePip = result[FEATURE_KEYS.pip] !== false;
+        const enableGesture = result[FEATURE_KEYS.gesture] !== false;
+        const enableSpeed = result[FEATURE_KEYS.speed] !== false;
+
+        // Miniplayer
+        const miniBtn = document.querySelector('.ytp-miniplayer-button');
+        if (enableMiniplayer) {
+            ensureMiniplayerButton();
+        } else if (miniBtn) {
+            miniBtn.remove();
+        }
+
+        // PiP
+        const pipBtn = document.querySelector('.custom-yt-pip-button');
+        if (enablePip) {
+            ensurePipButton();
+        } else if (pipBtn) {
+            pipBtn.remove();
+        }
+
+        // Speed Changer
+        const speedBtn = document.querySelector('.ytp-speed-changer-button');
+        if (enableSpeed) {
+            ensureSpeedButton();
+        } else if (speedBtn) {
+            speedBtn.remove();
+            setVideoSpeed(1); // reset speed
+        }
+
+        // Gesture Controls
+        const video = document.querySelector('video');
+        if (video) {
+            video.removeEventListener('wheel', handleVideoWheel, { passive: false });
+            video.onwheel = null;
+        }
+        gestureObserver.disconnect();
+        if (enableGesture) {
+            setupGestureControls();
+            gestureObserver.observe(document.body, { childList: true, subtree: true });
+        }
+
+        // Observe DOM changes for enabled features only
+        observer.disconnect();
+        observer = new MutationObserver(() => {
+            if (enablePip) {
+                const pipButton = document.querySelector('.custom-yt-pip-button');
+                if (pipButton) attachPipListener(pipButton);
+            }
+            if (enableMiniplayer) {
+                const miniButton = document.querySelector('.ytp-miniplayer-button');
+                if (miniButton) attachMiniplayerListener(miniButton);
+            }
+            if (enableSpeed) {
+                const speedBtn = document.querySelector('.ytp-speed-changer-button');
+                if (!speedBtn) ensureSpeedButton();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+}
 
 // Listen for YouTube navigation events (single-page navigation)
-window.addEventListener('yt-navigate-finish', runMiniplayerSetup);
+window.addEventListener('yt-navigate-finish', runFeatureSetup);
 
-// Observe DOM changes in case YouTube recreates the buttons
-const observer = new MutationObserver(() => {
-    const pipButton = document.querySelector('.custom-yt-pip-button');
-    const miniButton = document.querySelector('.ytp-miniplayer-button');
-    if (pipButton) attachPipListener(pipButton);
-    if (miniButton) attachMiniplayerListener(miniButton);
+// Initial run
+
+// Overlay for gesture/safe area visualization
+const GESTURE_OVERLAY_ID = 'yt-gesture-area-visual-overlay';
+const GESTURE_LABEL_CLASS = 'yt-gesture-area-label';
+
+function createGestureAreaOverlay() {
+    // Remove if already exists
+    removeGestureAreaOverlay();
+    const video = document.querySelector('video');
+    if (!video) return;
+    const rect = video.getBoundingClientRect();
+    const overlay = document.createElement('div');
+    overlay.id = GESTURE_OVERLAY_ID;
+    overlay.style.position = 'absolute';
+    overlay.style.left = 0;
+    overlay.style.top = 0;
+    overlay.style.width = video.offsetWidth + 'px';
+    overlay.style.height = video.offsetHeight + 'px';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '999998';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'row';
+    overlay.style.transition = 'opacity 0.2s';
+
+    // Parent must be relative
+    video.parentElement.style.position = 'relative';
+    video.parentElement.appendChild(overlay);
+
+    // Left (brightness)
+    const left = document.createElement('div');
+    left.style.flex = '0 0 30%';
+    left.style.background = 'rgba(255,255,0,0.13)';
+    left.style.borderRight = '2px solid rgba(255,255,0,0.3)';
+    left.style.height = '100%';
+    left.style.position = 'relative';
+    // Label
+    const leftLabel = document.createElement('div');
+    leftLabel.className = GESTURE_LABEL_CLASS;
+    leftLabel.textContent = 'Brightness';
+    leftLabel.style.position = 'absolute';
+    leftLabel.style.left = '50%';
+    leftLabel.style.top = '10%';
+    leftLabel.style.transform = 'translate(-50%, 0)';
+    leftLabel.style.background = 'rgba(0,0,0,0.7)';
+    leftLabel.style.color = '#fff';
+    leftLabel.style.fontSize = '1.1em';
+    leftLabel.style.padding = '0.2em 0.8em';
+    leftLabel.style.borderRadius = '0.7em';
+    leftLabel.style.pointerEvents = 'none';
+    left.appendChild(leftLabel);
+
+    // Center (safe)
+    const center = document.createElement('div');
+    center.style.flex = '0 0 40%';
+    center.style.background = 'rgba(0,255,0,0.10)';
+    center.style.height = '100%';
+    center.style.position = 'relative';
+    // Label
+    const centerLabel = document.createElement('div');
+    centerLabel.className = GESTURE_LABEL_CLASS;
+    centerLabel.textContent = 'Safe Area';
+    centerLabel.style.position = 'absolute';
+    centerLabel.style.left = '50%';
+    centerLabel.style.top = '10%';
+    centerLabel.style.transform = 'translate(-50%, 0)';
+    centerLabel.style.background = 'rgba(0,0,0,0.7)';
+    centerLabel.style.color = '#fff';
+    centerLabel.style.fontSize = '1.1em';
+    centerLabel.style.padding = '0.2em 0.8em';
+    centerLabel.style.borderRadius = '0.7em';
+    centerLabel.style.pointerEvents = 'none';
+    center.appendChild(centerLabel);
+
+    // Right (volume)
+    const right = document.createElement('div');
+    right.style.flex = '0 0 30%';
+    right.style.background = 'rgba(0,128,255,0.13)';
+    right.style.borderLeft = '2px solid rgba(0,128,255,0.3)';
+    right.style.height = '100%';
+    right.style.position = 'relative';
+    // Label
+    const rightLabel = document.createElement('div');
+    rightLabel.className = GESTURE_LABEL_CLASS;
+    rightLabel.textContent = 'Volume';
+    rightLabel.style.position = 'absolute';
+    rightLabel.style.left = '50%';
+    rightLabel.style.top = '10%';
+    rightLabel.style.transform = 'translate(-50%, 0)';
+    rightLabel.style.background = 'rgba(0,0,0,0.7)';
+    rightLabel.style.color = '#fff';
+    rightLabel.style.fontSize = '1.1em';
+    rightLabel.style.padding = '0.2em 0.8em';
+    rightLabel.style.borderRadius = '0.7em';
+    rightLabel.style.pointerEvents = 'none';
+    right.appendChild(rightLabel);
+
+    overlay.appendChild(left);
+    overlay.appendChild(center);
+    overlay.appendChild(right);
+}
+
+function removeGestureAreaOverlay() {
+    const overlay = document.getElementById(GESTURE_OVERLAY_ID);
+    if (overlay && overlay.parentElement) {
+        overlay.parentElement.removeChild(overlay);
+    }
+}
+
+// Listen for overlay setting and update overlay
+function updateGestureAreaOverlay() {
+    chrome.storage.sync.get(['show-gesture-overlay'], (result) => {
+        if (result['show-gesture-overlay']) {
+            createGestureAreaOverlay();
+        } else {
+            removeGestureAreaOverlay();
+        }
+    });
+}
+
+// Listen for changes from popup and apply all toggles live
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync') {
+        // Overlay toggle
+        if (changes['show-gesture-overlay']) {
+            updateGestureAreaOverlay();
+        }
+        // Feature toggles: miniplayer, pip, gesture, speed
+        const featureKeys = ['feature-miniplayer', 'feature-pip', 'feature-gesture', 'feature-speed'];
+        if (featureKeys.some(key => changes[key])) {
+            runFeatureSetup();
+        }
+        // Sensitivity change: no need to re-setup, handled on next gesture
+    }
 });
 
-// Start observing the whole document body for changes
-observer.observe(document.body, { childList: true, subtree: true });
+// On navigation or initial load, update overlay and features
+window.addEventListener('yt-navigate-finish', () => {
+    updateGestureAreaOverlay();
+    runFeatureSetup();
+});
+
+// On initial load
+updateGestureAreaOverlay();
+runFeatureSetup();
+
+// Observe DOM changes in case YouTube recreates the buttons (observer is now managed in runFeatureSetup)
+let observer = new MutationObserver(() => {});
+
+// --- Gesture controls for brightness and volume ---
+
+// Web Audio API setup for volume boost
+let audioCtx, sourceNode, gainNode, lastVideo;
+function setupWebAudio(video) {
+    if (!window.AudioContext) return;
+    if (lastVideo === video && gainNode) return; // already set up for this video
+    if (audioCtx) {
+        try { audioCtx.close(); } catch { }
+        audioCtx = null;
+        sourceNode = null;
+        gainNode = null;
+    }
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(video);
+    gainNode = audioCtx.createGain();
+    sourceNode.connect(gainNode).connect(audioCtx.destination);
+    lastVideo = video;
+}
+
+function handleVideoWheel(e) {
+    const video = e.currentTarget;
+    const rect = video.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+    const leftZone = width * 0.3;
+    const rightZone = width * 0.7;
+
+    // Safe space in the center 40%
+    if (x > leftZone && x < rightZone) return;
+
+    // Get sensitivity from storage (sync, fallback to 5)
+    chrome.storage.sync.get(['gesture-sensitivity'], (result) => {
+        const step = (parseFloat(result['gesture-sensitivity']) || 5) / 100;
+        if (x <= leftZone) {
+            // Adjust brightness (scroll up = increase, down = decrease)
+            e.preventDefault();
+            let current = parseFloat(video.style.filter?.match(/brightness\(([^)]+)\)/)?.[1] || 1);
+            if (isNaN(current)) current = 1;
+            let next = current + (e.deltaY < 0 ? step : -step); // up = increase
+            next = Math.max(0.1, Math.min(1, next)); // cap at 100%
+            video.style.filter = `brightness(${next})`;
+            showOverlay(`Brightness: ${Math.round(next * 100)}%`);
+        } else if (x >= rightZone) {
+            // Adjust volume (scroll up = increase, down = decrease)
+            e.preventDefault();
+            // Use Web Audio API for true boost
+            if (gainNode) {
+                let next = gainNode.gain.value + (e.deltaY < 0 ? step : -step); // up = increase
+                next = Math.max(0, Math.min(2, next)); // cap at 200%
+                gainNode.gain.value = next;
+                // Keep video.volume at 1 for max input to gain
+                video.volume = 1;
+                showOverlay(`Volume: ${Math.round(next * 100)}%`);
+            } else {
+                // fallback: normal volume
+                let next = video.volume + (e.deltaY < 0 ? step : -step);
+                next = Math.max(0, Math.min(1, next));
+                video.volume = next;
+                showOverlay(`Volume: ${Math.round(next * 100)}%`);
+            }
+        }
+    });
+}
+
+// Overlay for showing brightness/volume percentage
+let overlayTimeout;
+function showOverlay(text) {
+    const video = document.querySelector('video');
+    if (!video) return;
+    let overlay = document.getElementById('yt-gesture-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'yt-gesture-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.left = '50%';
+        overlay.style.top = '5%';
+        overlay.style.marginTop = '16px';
+        overlay.style.transform = 'translate(-50%, 0)';
+        overlay.style.background = 'rgba(0,0,0,0.7)';
+        overlay.style.color = '#fff';
+        overlay.style.fontSize = '2rem';
+        overlay.style.padding = '0.5em 1.5em';
+        overlay.style.borderRadius = '1em';
+        overlay.style.zIndex = '999999';
+        overlay.style.pointerEvents = 'none';
+        video.parentElement.style.position = 'relative';
+        video.parentElement.appendChild(overlay);
+    }
+    overlay.textContent = text;
+    overlay.style.display = 'block';
+    clearTimeout(overlayTimeout);
+    overlayTimeout = setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 800);
+}
+
+// --- Gesture controls for brightness and volume ---
+function setupGestureControls() {
+    const video = document.querySelector('video');
+    if (!video) return;
+
+    setupWebAudio(video);
+
+    // Remove any previous listeners to avoid duplicates
+    video.removeEventListener('wheel', handleVideoWheel, { passive: false });
+    video.addEventListener('wheel', handleVideoWheel, { passive: false });
+    // Only prevent page scroll in gesture zones (left/right), allow in safe area
+    video.onwheel = function(e) {
+        const rect = video.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const width = rect.width;
+        const leftZone = width * 0.3;
+        const rightZone = width * 0.7;
+        if (x <= leftZone || x >= rightZone) {
+            if (e.cancelable) e.preventDefault();
+        }
+    };
+}
+
+// Gesture observer is now managed in runFeatureSetup
+let gestureObserver = new MutationObserver(setupGestureControls);

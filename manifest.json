@@ -4,7 +4,8 @@
     "version": "1.1",
     "description": "Adds custom miniplayer and picture-in-picture buttons to YouTube.",
     "permissions": [
-        "scripting"
+        "scripting",
+        "storage"
     ],
     "host_permissions": [
         "https://www.youtube.com/*"
@@ -19,5 +20,9 @@
             ],
             "run_at": "document_idle"
         }
-    ]
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "YT Mini Player Extension Options"
+    }
 }
