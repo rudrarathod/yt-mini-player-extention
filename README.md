@@ -1,4 +1,4 @@
-# 🎬 YouTube Miniplayer & Picture-in-Picture Extension
+# 🎬YT-Experience-Enhancer
 
 > A powerful, modern browser extension that adds miniplayer, picture-in-picture, advanced gesture controls, and a live settings popup to YouTube's video player.
 
