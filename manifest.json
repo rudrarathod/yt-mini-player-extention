@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "YouTube Miniplayer & Picture-in-Picture Extension",
-    "version": "1.1",
+    "version": "0.5",
     "description": "Adds custom miniplayer and picture-in-picture buttons to YouTube.",
     "permissions": [
         "scripting",
