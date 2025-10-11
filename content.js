@@ -119,13 +119,161 @@ function ensureMiniplayerButton() {
 
 
 // --- Feature toggles from popup ---
+// --- Button Labels Overlay ---
+const BTN_LABELS_KEY = 'show-btn-labels';
+
+function showButtonLabels() {
+    // Remove any existing labels
+    document.querySelectorAll('.ytp-btn-label').forEach(e => e.remove());
+    // Only show for custom buttons
+    const btns = [
+        { sel: '.ytp-miniplayer-button', label: 'Miniplayer' },
+        { sel: '.custom-yt-pip-button', label: 'PiP' },
+        { sel: '.ytp-speed-changer-button', label: 'Speed' },
+        { sel: '.ytp-google-lens-button', label: 'Google Lens' }
+    ];
+    btns.forEach(({ sel, label }) => {
+        document.querySelectorAll(sel).forEach(btn => {
+            if (!btn.querySelector('.ytp-btn-label')) {
+                const div = document.createElement('div');
+                div.className = 'ytp-btn-label';
+                div.textContent = label;
+                div.style.position = 'absolute';
+                div.style.left = '50%';
+                div.style.top = '-1.7em';
+                div.style.transform = 'translateX(-50%)';
+                div.style.background = 'rgba(0,0,0,0.85)';
+                div.style.color = '#fff';
+                div.style.fontSize = '0.85em';
+                div.style.padding = '0.15em 0.7em';
+                div.style.borderRadius = '0.7em';
+                div.style.pointerEvents = 'none';
+                div.style.whiteSpace = 'nowrap';
+                div.style.zIndex = '10000';
+                div.style.fontWeight = '500';
+                div.style.letterSpacing = '0.01em';
+                div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+                div.style.marginBottom = '0.5em';
+                btn.style.position = 'relative';
+                btn.appendChild(div);
+            }
+        });
+    });
+}
+
+function hideButtonLabels() {
+    document.querySelectorAll('.ytp-btn-label').forEach(e => e.remove());
+}
+// Listen for button label toggle and update in real time
+function updateButtonLabelsFromStorage() {
+    chrome.storage.sync.get([BTN_LABELS_KEY], (result) => {
+        if (result[BTN_LABELS_KEY]) {
+            showButtonLabels();
+        } else {
+            hideButtonLabels();
+        }
+    });
+}
+
+// Observe DOM changes to re-apply labels if needed
+let btnLabelObserver = new MutationObserver(() => {
+    chrome.storage.sync.get([BTN_LABELS_KEY], (result) => {
+        if (result[BTN_LABELS_KEY]) showButtonLabels();
+    });
+});
+// Listen for changes from popup and apply all toggles live
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync') {
+        if (changes[BTN_LABELS_KEY]) {
+            if (changes[BTN_LABELS_KEY].newValue) {
+                showButtonLabels();
+            } else {
+                hideButtonLabels();
+            }
+        }
+    }
+});
 
 const FEATURE_KEYS = {
     miniplayer: 'feature-miniplayer',
     pip: 'feature-pip',
     gesture: 'feature-gesture',
-    speed: 'feature-speed'
+    speed: 'feature-speed',
+    lens: 'feature-lens'
 };
+
+// --- Google Lens Button ---
+function ensureLensButton() {
+    let lensBtn = document.querySelector('.ytp-google-lens-button');
+    if (!lensBtn) {
+        lensBtn = document.createElement('button');
+    lensBtn.className = 'ytp-google-lens-button ytp-button';
+        lensBtn.setAttribute('data-priority', '9');
+        lensBtn.setAttribute('title', 'Search this frame with Google Lens');
+        lensBtn.setAttribute('aria-label', 'Search this frame with Google Lens');
+        lensBtn.setAttribute('data-tooltip-title', 'Search this frame with Google Lens');
+        lensBtn.setAttribute('data-title-no-tooltip', 'Google Lens');
+        lensBtn.innerHTML = `
+            <svg width="100%" height="100%" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 21.4444C17.0741 21.4444 16.287 21.1204 15.6389 20.4722C14.9907 19.8241 14.6667 19.037 14.6667 18.1111C14.6667 17.1852 14.9907 16.3981 15.6389 15.75C16.287 15.1019 17.0741 14.7778 18 14.7778C18.9259 14.7778 19.713 15.1019 20.3611 15.75C21.0093 16.3981 21.3333 17.1852 21.3333 18.1111C21.3333 19.037 21.0093 19.8241 20.3611 20.4722C19.713 21.1204 18.9259 21.4444 18 21.4444ZM24.6667 25.8889C24.0556 25.8889 23.5324 25.6713 23.0972 25.2361C22.662 24.8009 22.4444 24.2778 22.4444 23.6667C22.4444 23.0556 22.662 22.5324 23.0972 22.0972C23.5324 21.662 24.0556 21.4444 24.6667 21.4444C25.2778 21.4444 25.8009 21.662 26.2361 22.0972C26.6713 22.5324 26.8889 23.0556 26.8889 23.6667C26.8889 24.2778 26.6713 24.8009 26.2361 25.2361C25.8009 25.6713 25.2778 25.8889 24.6667 25.8889ZM12.4444 27C11.2222 27 10.1759 26.5648 9.30556 25.6944C8.43519 24.8241 8 23.7778 8 22.5556V20.3333H10.2222V22.5556C10.2222 23.1667 10.4398 23.6898 10.875 24.125C11.3102 24.5602 11.8333 24.7778 12.4444 24.7778H18V27H12.4444ZM25.7778 18.1111V13.6667C25.7778 13.0556 25.5602 12.5324 25.125 12.0972C24.6898 11.662 24.1667 11.4444 23.5556 11.4444H12.4444C11.8333 11.4444 11.3102 11.662 10.875 12.0972C10.4398 12.5324 10.2222 13.0556 10.2222 13.6667V17H8V13.6667C8 12.4444 8.43519 11.3981 9.30556 10.5278C10.1759 9.65741 11.2222 9.22222 12.4444 9.22222H14.6667L15.7778 7H20.2222L21.3333 9.22222H23.5556C24.7778 9.22222 25.8241 9.65741 26.6944 10.5278C27.5648 11.3981 28 12.4444 28 13.6667V18.1111H25.7778Z" fill="white"/>
+            </svg>
+        `;
+        lensBtn.addEventListener('click', openCurrentFrameInLens);
+        // Insert after PiP and before settings button for best alignment
+        const pipButton = document.querySelector('.custom-yt-pip-button');
+        const settingsButton = document.querySelector('.ytp-settings-button');
+        if (pipButton && pipButton.parentNode) {
+            pipButton.parentNode.insertBefore(lensBtn, settingsButton || pipButton.nextSibling);
+        } else if (settingsButton && settingsButton.parentNode) {
+            settingsButton.parentNode.insertBefore(lensBtn, settingsButton);
+        } else {
+            const rightControls = document.querySelector('.ytp-right-controls');
+            if (rightControls) rightControls.appendChild(lensBtn);
+        }
+    }
+}
+
+function removeLensButton() {
+    const lensBtn = document.querySelector('.ytp-google-lens-button');
+    if (lensBtn) lensBtn.remove();
+}
+
+function openCurrentFrameInLens() {
+    const video = document.querySelector('video');
+    if (!video) return;
+    video.pause(); // Pause the video when using Google Lens
+    // Draw current frame to canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+        if (!blob) return;
+        // Create a file and form data
+        const file = new File([blob], 'frame.png', { type: 'image/png' });
+        // Create a temporary form and submit to a new tab
+        const url = 'https://lens.google.com/upload';
+        const tempForm = document.createElement('form');
+        tempForm.action = url;
+        tempForm.method = 'POST';
+        tempForm.enctype = 'multipart/form-data';
+        tempForm.target = '_blank';
+        tempForm.style.display = 'none';
+        // Add the file input
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.name = 'encoded_image';
+        // Use DataTransfer to set the file
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        tempForm.appendChild(fileInput);
+        document.body.appendChild(tempForm);
+        tempForm.submit();
+        setTimeout(() => tempForm.remove(), 1000);
+    }, 'image/png');
+}
 
 // --- Speed Changer Button ---
 const SPEED_MODES = [0.5, 0.75, 1, 1.5, 2];
@@ -141,13 +289,14 @@ function ensureSpeedButton() {
     let speedBtn = document.querySelector('.ytp-speed-changer-button');
     if (!speedBtn) {
         speedBtn = document.createElement('button');
-        speedBtn.className = 'ytp-speed-changer-button ytp-button';
+    speedBtn.className = 'ytp-speed-changer-button ytp-button';
         speedBtn.setAttribute('data-priority', '8');
         speedBtn.setAttribute('title', 'Playback Speed');
         speedBtn.setAttribute('aria-label', 'Playback Speed');
         speedBtn.setAttribute('data-tooltip-title', 'Playback Speed');
         speedBtn.setAttribute('data-title-no-tooltip', 'Playback Speed');
-        speedBtn.innerHTML = SPEED_ICONS[1];
+    // Use width/height 100% for SVG icon
+    speedBtn.innerHTML = SPEED_ICONS[1].replace('width="36"', 'width="100%"').replace('height="36"', 'height="100%"');
         speedBtn.__speedIndex = 2; // default to 1x
         speedBtn.addEventListener('click', function() {
             this.__speedIndex = (this.__speedIndex + 1) % SPEED_MODES.length;
@@ -169,7 +318,7 @@ function ensureSpeedButton() {
     }
     // Set initial speed and icon
     setVideoSpeed(SPEED_MODES[speedBtn.__speedIndex || 2]);
-    speedBtn.innerHTML = SPEED_ICONS[SPEED_MODES[speedBtn.__speedIndex || 2]];
+    speedBtn.innerHTML = SPEED_ICONS[SPEED_MODES[speedBtn.__speedIndex || 2]].replace('width="36"', 'width="100%"').replace('height="36"', 'height="100%"');
 }
 
 function setVideoSpeed(speed) {
@@ -183,13 +332,15 @@ function runFeatureSetup() {
         FEATURE_KEYS.miniplayer,
         FEATURE_KEYS.pip,
         FEATURE_KEYS.gesture,
-        FEATURE_KEYS.speed
+        FEATURE_KEYS.speed,
+        FEATURE_KEYS.lens
     ], (result) => {
         // Default: all features ON if not set
         const enableMiniplayer = result[FEATURE_KEYS.miniplayer] !== false;
         const enablePip = result[FEATURE_KEYS.pip] !== false;
         const enableGesture = result[FEATURE_KEYS.gesture] !== false;
         const enableSpeed = result[FEATURE_KEYS.speed] !== false;
+        const enableLens = result[FEATURE_KEYS.lens] !== false;
 
         // Miniplayer
         const miniBtn = document.querySelector('.ytp-miniplayer-button');
@@ -214,6 +365,14 @@ function runFeatureSetup() {
         } else if (speedBtn) {
             speedBtn.remove();
             setVideoSpeed(1); // reset speed
+        }
+
+        // Google Lens
+        const lensBtn = document.querySelector('.ytp-google-lens-button');
+        if (enableLens) {
+            ensureLensButton();
+        } else if (lensBtn) {
+            lensBtn.remove();
         }
 
         // Gesture Controls
@@ -242,6 +401,10 @@ function runFeatureSetup() {
             if (enableSpeed) {
                 const speedBtn = document.querySelector('.ytp-speed-changer-button');
                 if (!speedBtn) ensureSpeedButton();
+            }
+            if (enableLens) {
+                const lensBtn = document.querySelector('.ytp-google-lens-button');
+                if (!lensBtn) ensureLensButton();
             }
         });
         observer.observe(document.body, { childList: true, subtree: true });
@@ -378,8 +541,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
         if (changes['show-gesture-overlay']) {
             updateGestureAreaOverlay();
         }
-        // Feature toggles: miniplayer, pip, gesture, speed
-        const featureKeys = ['feature-miniplayer', 'feature-pip', 'feature-gesture', 'feature-speed'];
+        // Feature toggles: miniplayer, pip, gesture, speed, lens
+        const featureKeys = ['feature-miniplayer', 'feature-pip', 'feature-gesture', 'feature-speed', 'feature-lens'];
         if (featureKeys.some(key => changes[key])) {
             runFeatureSetup();
         }
@@ -391,11 +554,14 @@ chrome.storage.onChanged.addListener((changes, area) => {
 window.addEventListener('yt-navigate-finish', () => {
     updateGestureAreaOverlay();
     runFeatureSetup();
+    updateButtonLabelsFromStorage();
 });
 
 // On initial load
 updateGestureAreaOverlay();
 runFeatureSetup();
+updateButtonLabelsFromStorage();
+btnLabelObserver.observe(document.body, { childList: true, subtree: true });
 
 // Observe DOM changes in case YouTube recreates the buttons (observer is now managed in runFeatureSetup)
 let observer = new MutationObserver(() => {});

@@ -17,15 +17,17 @@ const featureIds = [
   'feature-miniplayer',
   'feature-pip',
   'feature-gesture',
-  'feature-speed'
+  'feature-speed',
+  'feature-lens'
 ];
 const SENSITIVITY_KEY = 'gesture-sensitivity';
 const OVERLAY_KEY = 'show-gesture-overlay';
+const BTN_LABELS_KEY = 'show-btn-labels';
 
 
 
 // Load saved settings
-chrome.storage.sync.get([...featureIds, SENSITIVITY_KEY, OVERLAY_KEY], (result) => {
+chrome.storage.sync.get([...featureIds, SENSITIVITY_KEY, OVERLAY_KEY, BTN_LABELS_KEY], (result) => {
   featureIds.forEach(id => {
     document.getElementById(id).checked = result[id] !== false; // default ON
   });
@@ -35,7 +37,16 @@ chrome.storage.sync.get([...featureIds, SENSITIVITY_KEY, OVERLAY_KEY], (result) 
   document.getElementById('gesture-sensitivity-value').textContent = value;
   const overlayBox = document.getElementById('show-gesture-overlay');
   overlayBox.checked = !!result[OVERLAY_KEY];
+  const btnLabelsBox = document.getElementById('show-btn-labels');
+  if (btnLabelsBox) btnLabelsBox.checked = !!result[BTN_LABELS_KEY];
 });
+// Save button labels toggle
+const btnLabelsBox = document.getElementById('show-btn-labels');
+if (btnLabelsBox) {
+  btnLabelsBox.addEventListener('change', () => {
+    chrome.storage.sync.set({ [BTN_LABELS_KEY]: btnLabelsBox.checked });
+  });
+}
 
 // Save overlay toggle
 const overlayBox = document.getElementById('show-gesture-overlay');
@@ -70,7 +81,7 @@ toggleAllBtn.addEventListener('click', () => {
 });
 
 // Save on change
-form.addEventListener('change', () => {
+form.addEventListener('change', (e) => {
   const settings = {};
   featureIds.forEach(id => {
     settings[id] = document.getElementById(id).checked;

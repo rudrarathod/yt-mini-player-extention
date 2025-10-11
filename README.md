@@ -1,4 +1,4 @@
-# 🎬YT-Experience-Enhancer
+# 🎬 YouTube Miniplayer & Picture-in-Picture Extension
 
 > A powerful, modern browser extension that adds miniplayer, picture-in-picture, advanced gesture controls, and a live settings popup to YouTube's video player.
 
@@ -20,6 +20,7 @@
 - 👆 **Gesture Area Overlay** — Visualize the left (brightness), center (safe), and right (volume) gesture zones with labels directly on the video (toggle in popup)
 - 🎚️ **Adjustable Sensitivity** — Fine-tune gesture control sensitivity from the popup
 - 🟢 **Live Feature Toggling** — All settings apply in real time—no need to refresh the page
+- 🔍 **Google Lens Button** — Instantly capture the current video frame and search it with Google Lens, right from the player controls (toggle in popup)
 
 ## 🌐 Browser Support
 
@@ -75,10 +76,17 @@ cd yt-mini-player-extention
 
 ### Using the Picture-in-Picture Button
 
+### Using the Google Lens Button
+
 1. **Navigate** to any YouTube video
-2. **Look** for the picture-in-picture button in the video player controls (located before the settings gear icon)
-3. **Click** the button to open the video in a floating window
-4. The video will appear in a dedicated floating window that stays on top of other applications
+2. **Look** for the Google Lens button in the video player controls (located near the settings gear icon)
+3. **Click** the button to capture the current video frame and open it in Google Lens in a new tab
+4. Use the popup to toggle the Google Lens button on or off
+
+5. **Navigate** to any YouTube video
+6. **Look** for the picture-in-picture button in the video player controls (located before the settings gear icon)
+7. **Click** the button to open the video in a floating window
+8. The video will appear in a dedicated floating window that stays on top of other applications
 
 ### Using Gesture Controls (Brightness & Volume)
 
@@ -98,7 +106,9 @@ Simply press the **`i`** key while watching any YouTube video to toggle miniplay
 - **PiP Button**: Located before the settings gear icon
 - **Miniplayer Button**: Located next to the settings gear icon
 - **Gesture Area Overlay**: Toggle in the popup to see colored zones and labels for brightness, safe area, and volume on the video
+- **Google Lens Button**: Located near the settings gear icon; lets you search the current frame with Google Lens
 
+**Example Visuals**
 ![Popup Panel](assests/popup/image.png)
 
 ![Button locations](assests/image.png)
@@ -111,9 +121,10 @@ The extension uses modern web technologies to seamlessly integrate with YouTube:
 2. **DOM Manipulation** — Creates and injects button elements into YouTube's player controls
 3. **Event Simulation** — Miniplayer button simulates pressing the "i" key
 4. **Native PiP API** — Picture-in-Picture button uses browser's `requestPictureInPicture()` API
-5. **Navigation Handling** — Listens for YouTube's SPA navigation events
-6. **Mutation Observer** — Monitors DOM changes to ensure buttons and gesture controls persist
-7. **Popup UI** — All feature toggles, gesture sensitivity, and overlay options are managed live via the popup (no refresh required)
+5. **Google Lens Integration** — Google Lens button captures the current frame and submits it to Google Lens for visual search
+6. **Navigation Handling** — Listens for YouTube's SPA navigation events
+7. **Mutation Observer** — Monitors DOM changes to ensure buttons and gesture controls persist
+8. **Popup UI** — All feature toggles, gesture sensitivity, and overlay options are managed live via the popup (no refresh required)
 
 ## 📁 Project Structure
 
@@ -121,7 +132,7 @@ The extension uses modern web technologies to seamlessly integrate with YouTube:
 
 yt-mini-player-extention/
 ├── manifest.json       # Extension configuration (Manifest V3)
-├── content.js          # Main content script for all features and overlays
+├── content.js          # Main content script for all features and overlays (miniplayer, PiP, speed, Google Lens, gestures)
 ├── popup.html          # Popup UI for live feature toggling and settings
 ├── popup.js            # Popup logic for syncing settings and live updates
 └── README.md           # This documentation file
@@ -130,7 +141,7 @@ yt-mini-player-extention/
 ### File Descriptions
 
 - **`manifest.json`** — Defines the extension's metadata, permissions, and behavior
-- **`content.js`** — Contains the logic for all features: miniplayer, PiP, gesture controls, overlays, and live feature toggling
+- **`content.js`** — Contains the logic for all features: miniplayer, PiP, speed changer, Google Lens, gesture controls, overlays, and live feature toggling
 - **`popup.html`** — Modern popup UI for toggling features, adjusting sensitivity, and showing overlays
 - **`popup.js`** — Handles popup logic, chrome.storage sync, and real-time updates
 - **`README.md`** — Complete documentation and usage instructions
@@ -162,6 +173,12 @@ cd yt-mini-player-extention
 ```
 
 ## ❓ Troubleshooting
+
+**Google Lens button not appearing?**
+
+- Make sure the feature is enabled in the popup settings
+- Try toggling the feature off and on again
+- Reload the YouTube page if needed
 
 **Buttons not appearing?**
 
